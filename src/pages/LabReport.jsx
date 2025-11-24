@@ -23,10 +23,45 @@ export default function LabReport() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("Lab Report form:", form);
-    alert("Lab Report form submitted! (Backend wiring comes next)");
+    try {
+      const response = await fetch('/api/lab-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Lab report saved successfully! Report ID: ${data.reportId}`);
+        // Reset form
+        setForm({
+          patientId: "",
+          patientName: "",
+          date: "",
+          physician: "",
+          hemoglobin: "",
+          rbc: "",
+          wbc: "",
+          glucose: "",
+          cholesterol: "",
+          microbiologyFindings: "",
+          xray: "",
+          ctScan: "",
+          mri: "",
+          ultrasound: ""
+        });
+      } else {
+        alert(`Error: ${data.error || 'Failed to save lab report'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please check if the backend server is running.');
+    }
   };
 
   const styles = {

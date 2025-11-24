@@ -1,51 +1,30 @@
-// Database configuration
-// Uncomment the section for YOUR database type
+// Database configuration for MySQL
+import mysql from 'mysql2/promise';
 
-// ====== POSTGRESQL ======
-// import pg from 'pg';
-// const { Pool } = pg;
-// 
-// const pool = new Pool({
-//   host: process.env.DB_HOST || 'localhost',
-//   port: process.env.DB_PORT || 5432,
-//   database: process.env.DB_NAME,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-// });
-// 
-// export { pool };
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
+  database: process.env.DB_NAME || 'electronic_health_records',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'Srip1898!',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-// ====== MYSQL ======
-// import mysql from 'mysql2/promise';
-// 
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST || 'localhost',
-//   port: process.env.DB_PORT || 3306,
-//   database: process.env.DB_NAME,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   queueLimit: 0
-// });
-// 
-// export { pool };
-
-// ====== SQLITE ======
-// import sqlite3 from 'sqlite3';
-// import { open } from 'sqlite';
-// 
-// const db = await open({
-//   filename: process.env.DB_PATH || './database.sqlite',
-//   driver: sqlite3.Database
-// });
-// 
-// export { db };
-
-// FOR NOW - No database connection (using test data)
-export const testConnection = () => {
-  console.log('Database connection will be configured based on your setup');
-  return { message: 'Database ready' };
+// Test database connection
+export const testConnection = async () => {
+  try {
+    const connection = await pool.getConnection();
+    console.log('Database connected successfully');
+    connection.release();
+    return { message: 'Database connected successfully' };
+  } catch (error) {
+    console.error('Database connection error:', error.message);
+    throw error;
+  }
 };
+
+export { pool };
 
 

@@ -20,10 +20,42 @@ export default function MedicalHistory() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("Medical History form:", form);
-    alert("Medical History form submitted! (Backend wiring comes next)");
+    try {
+      const response = await fetch('/api/medical-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Medical history ${data.message.includes('updated') ? 'updated' : 'saved'} successfully!`);
+        // Reset form
+        setForm({
+          patientId: "",
+          patientName: "",
+          chronicIllnesses: "",
+          surgeries: "",
+          currentMedications: "",
+          allergies: "",
+          hospitalizations: "",
+          familyHistory: "",
+          immunizations: "",
+          socialHistory: "",
+          otherConditions: ""
+        });
+      } else {
+        alert(`Error: ${data.error || 'Failed to save medical history'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please check if the backend server is running.');
+    }
   };
 
   const styles = {

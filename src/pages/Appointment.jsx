@@ -52,22 +52,57 @@ export default function Appointment() {
     }
   };
 
-  const checkAvailability = (doctor, date) => {
+  const checkAvailability = async (doctor, date) => {
     if (!doctor || !date) return;
     
-    // For now, just keep all time slots available
-    // Later, you'll fetch from your backend:
-    // fetch(`/checkAvailability?doctor=${doctor}&date=${date}`)
-    //   .then(response => response.json())
-    //   .then(data => setAvailableTimes(filtered times));
-    
-    console.log("Checking availability for:", doctor, date);
+    try {
+      const response = await fetch(`/api/appointment/availability?doctor=${encodeURIComponent(doctor)}&date=${date}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Filter out booked times
+        const allTimes = generateTimeSlots();
+        const available = allTimes.filter(time => !data.bookedTimes.includes(time));
+        setAvailableTimes(available);
+      }
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      // Fallback to all times if check fails
+      setAvailableTimes(generateTimeSlots());
+    }
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("Appointment form:", form);
-    alert("Appointment booking submitted! (Backend wiring comes next)");
+    try {
+      const response = await fetch('/api/appointment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Appointment booked successfully! Appointment ID: ${data.appointmentId}`);
+        // Reset form
+        setForm({
+          patient_name: "",
+          patient_email: "",
+          doctor_name: "",
+          appointment_date: "",
+          appointment_time: ""
+        });
+        setAvailableTimes(generateTimeSlots());
+      } else {
+        alert(`Error: ${data.error || 'Failed to book appointment'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please check if the backend server is running.');
+    }
   };
 
   const styles = {

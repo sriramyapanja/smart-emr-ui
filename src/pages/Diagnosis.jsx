@@ -19,10 +19,41 @@ export default function Diagnosis() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("Diagnosis form:", form);
-    alert("Diagnosis form submitted! (Backend wiring comes next)");
+    try {
+      const response = await fetch('/api/diagnosis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Diagnosis recorded successfully! Diagnosis ID: ${data.diagnosisId}`);
+        // Reset form
+        setForm({
+          patientId: "",
+          patientName: "",
+          date: "",
+          symptoms: "",
+          observations: "",
+          provisionalDiagnosis: "",
+          tests: "",
+          finalDiagnosis: "",
+          treatmentPlan: "",
+          followUp: ""
+        });
+      } else {
+        alert(`Error: ${data.error || 'Failed to record diagnosis'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please check if the backend server is running.');
+    }
   };
 
   const styles = {

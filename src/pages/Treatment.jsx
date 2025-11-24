@@ -19,17 +19,41 @@ export default function Treatment() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // For now, just confirm it works:
-    console.log("Treatment form:", form);
-    alert("Treatment form submitted! (Backend wiring comes next)");
-    // Later you'll POST to your API:
-    // await fetch("http://localhost:3001/submit-treatment", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(form),
-    // });
+    try {
+      const response = await fetch('/api/treatment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Treatment recorded successfully! Treatment ID: ${data.treatmentId}`);
+        // Reset form
+        setForm({
+          patientId: "",
+          patientName: "",
+          date: "",
+          diagnosis: "",
+          medications: "",
+          procedures: "",
+          therapyPlan: "",
+          diet: "",
+          lifestyle: "",
+          followUp: "",
+        });
+      } else {
+        alert(`Error: ${data.error || 'Failed to record treatment'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please check if the backend server is running.');
+    }
   };
 
   // Simple inline styles, copied from your HTML
