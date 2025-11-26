@@ -1,5 +1,6 @@
 # Smart Electronic Medical Records (EMR) System
 
+<<<<<<< HEAD
 A full-stack web application for managing electronic medical records with patient registration, diagnosis, treatment, pathology, radiology, and appointment scheduling.
 
 ## 🚀 Quick Start
@@ -128,3 +129,7 @@ DB_PASSWORD=Srip1898!
 ## 📄 License
 
 This project is for educational/development purposes.
+=======
+FRONT END: http://localhost:5173
+BACK END: http://localhost:3001
+>>>>>>> 07140fefe5699e58fa0262d39fa1b5cc3409c95b
