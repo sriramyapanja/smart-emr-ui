@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
 
     const [result] = await pool.execute(
       `INSERT INTO diagnosis 
-       (patient_id, patient_name, date, symptoms, observations, provisional_diagnosis, tests, final_diagnosis, treatment_plan, follow_up) 
+       (patient_id, patient_name, diagnosis_date, symptoms, observations, provisional_diagnosis, tests, final_diagnosis, treatment_plan, follow_up) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         patientId || null,

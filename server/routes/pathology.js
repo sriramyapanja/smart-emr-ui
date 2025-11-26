@@ -87,13 +87,13 @@ router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM pathology_requests ORDER BY created_at DESC');
     
-    // Parse JSON strings back to arrays
+    // Parse JSON strings back to arrays/strings
     const parsedRows = rows.map(row => ({
       ...row,
-      favourite_tests: row.favourite_tests ? JSON.parse(row.favourite_tests) : [],
-      test_list: row.test_list ? JSON.parse(row.test_list) : [],
-      clinical_details: row.clinical_details ? JSON.parse(row.clinical_details) : [],
-      collection_by: row.collection_by ? JSON.parse(row.collection_by) : []
+      favourite_tests: row.favourite_tests ? (row.favourite_tests.startsWith('[') ? JSON.parse(row.favourite_tests) : row.favourite_tests) : null,
+      test_list: row.test_list ? (row.test_list.startsWith('[') ? JSON.parse(row.test_list) : row.test_list) : null,
+      clinical_details: row.clinical_details ? (row.clinical_details.startsWith('[') ? JSON.parse(row.clinical_details) : row.clinical_details) : [],
+      collection_by: row.collection_by ? (row.collection_by.startsWith('[') ? JSON.parse(row.collection_by) : row.collection_by) : []
     }));
     
     res.json(parsedRows);
@@ -115,10 +115,10 @@ router.get('/:id', async (req, res) => {
     const row = rows[0];
     const parsedRow = {
       ...row,
-      favourite_tests: row.favourite_tests ? JSON.parse(row.favourite_tests) : [],
-      test_list: row.test_list ? JSON.parse(row.test_list) : [],
-      clinical_details: row.clinical_details ? JSON.parse(row.clinical_details) : [],
-      collection_by: row.collection_by ? JSON.parse(row.collection_by) : []
+      favourite_tests: row.favourite_tests ? (row.favourite_tests.startsWith('[') ? JSON.parse(row.favourite_tests) : row.favourite_tests) : null,
+      test_list: row.test_list ? (row.test_list.startsWith('[') ? JSON.parse(row.test_list) : row.test_list) : null,
+      clinical_details: row.clinical_details ? (row.clinical_details.startsWith('[') ? JSON.parse(row.clinical_details) : row.clinical_details) : [],
+      collection_by: row.collection_by ? (row.collection_by.startsWith('[') ? JSON.parse(row.collection_by) : row.collection_by) : []
     };
     
     res.json(parsedRow);

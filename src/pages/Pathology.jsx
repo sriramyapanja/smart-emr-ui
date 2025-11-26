@@ -1,6 +1,14 @@
 import { useState } from "react";
 
 export default function Pathology() {
+  // Patient search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [patientRecords, setPatientRecords] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showRecords, setShowRecords] = useState(false);
+
   const [form, setForm] = useState({
     patient_id: "",
     patient_name: "",
@@ -8,8 +16,8 @@ export default function Pathology() {
     test_date: "",
     request_date: "",
     lab: "",
-    favourite_tests: [],
-    test_list: [],
+    favourite_tests: "",
+    test_list: "",
     clinical_details: [],
     last_cytology: false,
     cytology_date: "",
@@ -56,6 +64,69 @@ export default function Pathology() {
     }
   };
 
+  // Search patients
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      alert('Please enter a search term');
+      return;
+    }
+
+    setLoading(true);
+    setSearchResults([]);
+    try {
+      const response = await fetch(`/api/patients/search?query=${encodeURIComponent(searchQuery)}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Search results:', data);
+      
+      if (Array.isArray(data)) {
+        setSearchResults(data);
+        if (data.length === 0) {
+          alert('No patients found');
+        }
+      } else {
+        console.error('Unexpected response format:', data);
+        alert('Unexpected response from server');
+      }
+    } catch (error) {
+      console.error('Error searching:', error);
+      alert(`Failed to search patients: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Select patient and auto-fill form
+  const selectPatient = async (patient) => {
+    setSelectedPatient(patient);
+    const patientId = patient.id || patient.patient_id || "";
+    setForm(f => ({
+      ...f,
+      patient_id: patientId,
+      patient_name: `${patient.first_name || ""} ${patient.last_name || ""}`.trim() || ""
+    }));
+    setSearchResults([]);
+    setSearchQuery("");
+    
+    // Load patient records
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/patients/${patientId}/records`);
+      const data = await response.json();
+      // Handle the nested structure from backend
+      setPatientRecords(data.records || data);
+    } catch (error) {
+      console.error('Error loading records:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -79,8 +150,8 @@ export default function Pathology() {
           test_date: "",
           request_date: "",
           lab: "",
-          favourite_tests: [],
-          test_list: [],
+          favourite_tests: "",
+          test_list: "",
           clinical_details: [],
           last_cytology: false,
           cytology_date: "",
@@ -95,6 +166,12 @@ export default function Pathology() {
           fasting_status: "",
           billing_type: ""
         });
+        // Reset patient search
+        setSelectedPatient(null);
+        setPatientRecords(null);
+        setShowRecords(false);
+        setSearchQuery("");
+        setSearchResults([]);
       } else {
         alert(`Error: ${data.error || 'Failed to submit pathology request'}`);
       }
@@ -194,12 +271,205 @@ export default function Pathology() {
       border: "1px solid #ccc",
       borderRadius: "5px",
       cursor: "pointer"
+    },
+    searchContainer: {
+      border: "1px solid #ccc",
+      padding: "15px",
+      marginBottom: "20px",
+      borderRadius: "5px",
+      backgroundColor: "#f9f9f9"
+    },
+    searchInput: {
+      width: "calc(100% - 120px)",
+      padding: "8px",
+      fontSize: "14px",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+      marginRight: "10px"
+    },
+    searchButton: {
+      padding: "8px 20px",
+      fontSize: "14px",
+      color: "#fff",
+      backgroundColor: "#007BFF",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer"
+    },
+    searchResults: {
+      marginTop: "10px",
+      maxHeight: "200px",
+      overflowY: "auto",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      backgroundColor: "#fff"
+    },
+    searchResultItem: {
+      padding: "10px",
+      borderBottom: "1px solid #eee",
+      cursor: "pointer",
+      transition: "background-color 0.2s"
+    },
+    searchResultItemHover: {
+      backgroundColor: "#e3f2fd"
+    },
+    recordsContainer: {
+      marginTop: "20px",
+      padding: "15px",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+      backgroundColor: "#fff"
+    },
+    recordItem: {
+      padding: "10px",
+      marginBottom: "10px",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      backgroundColor: "#f9f9f9"
+    },
+    recordType: {
+      fontWeight: "bold",
+      color: "#007BFF",
+      marginBottom: "5px"
     }
   };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.h1}>Pathology Request Form</h1>
+      
+      {/* Patient Search Section */}
+      <div style={styles.searchContainer}>
+        <h2 style={styles.h2}>Search Patient</h2>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Search by Patient ID, Name, Email, or Phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            style={styles.searchInput}
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            disabled={loading}
+            style={styles.searchButton}
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </div>
+        
+        {searchResults.length > 0 && (
+          <div style={styles.searchResults}>
+            {searchResults.map((patient) => {
+              const patientId = patient.id || patient.patient_id;
+              return (
+                <div
+                  key={patientId}
+                  onClick={() => selectPatient(patient)}
+                  style={styles.searchResultItem}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = styles.searchResultItemHover.backgroundColor}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = "#fff"}
+                >
+                  <strong>ID: {patientId}</strong> - {patient.first_name} {patient.last_name}
+                  {patient.email && ` - ${patient.email}`}
+                  {patient.phone && ` - ${patient.phone}`}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedPatient && (
+          <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#e8f5e9", borderRadius: "4px" }}>
+            <strong>Selected Patient:</strong> {selectedPatient.first_name} {selectedPatient.last_name} (ID: {selectedPatient.id || selectedPatient.patient_id})
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPatient(null);
+                setPatientRecords(null);
+                setShowRecords(false);
+                setForm(f => ({ ...f, patient_id: "", patient_name: "" }));
+              }}
+              style={{ marginLeft: "10px", padding: "5px 10px", fontSize: "12px", cursor: "pointer" }}
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRecords(!showRecords)}
+              style={{ marginLeft: "10px", padding: "5px 10px", fontSize: "12px", cursor: "pointer", backgroundColor: "#007BFF", color: "#fff", border: "none", borderRadius: "4px" }}
+            >
+              {showRecords ? "Hide" : "Show"} Records
+            </button>
+          </div>
+        )}
+
+        {showRecords && patientRecords && (
+          <div style={styles.recordsContainer}>
+            <h3 style={{ marginTop: 0 }}>Patient Records</h3>
+            {patientRecords.diagnosis && patientRecords.diagnosis.length > 0 && (
+              <div style={{ marginBottom: "15px" }}>
+                <div style={styles.recordType}>Diagnosis ({patientRecords.diagnosis.length})</div>
+                {patientRecords.diagnosis.slice(0, 3).map((record, idx) => (
+                  <div key={idx} style={styles.recordItem}>
+                    <strong>Date:</strong> {record.diagnosis_date || record.date || 'N/A'} - <strong>Diagnosis:</strong> {record.final_diagnosis || record.condition || 'N/A'}
+                  </div>
+                ))}
+              </div>
+            )}
+            {patientRecords.treatment && patientRecords.treatment.length > 0 && (
+              <div style={{ marginBottom: "15px" }}>
+                <div style={styles.recordType}>Treatment ({patientRecords.treatment.length})</div>
+                {patientRecords.treatment.slice(0, 3).map((record, idx) => (
+                  <div key={idx} style={styles.recordItem}>
+                    <strong>Date:</strong> {record.treatment_date || record.date || 'N/A'} - <strong>Diagnosis:</strong> {record.diagnosis || 'N/A'}
+                  </div>
+                ))}
+              </div>
+            )}
+            {patientRecords.pathology && patientRecords.pathology.length > 0 && (
+              <div style={{ marginBottom: "15px" }}>
+                <div style={styles.recordType}>Pathology Requests ({patientRecords.pathology.length})</div>
+                {patientRecords.pathology.slice(0, 3).map((record, idx) => (
+                  <div key={idx} style={styles.recordItem}>
+                    <strong>Date:</strong> {record.request_date || 'N/A'} - <strong>Lab:</strong> {record.lab || 'N/A'}
+                  </div>
+                ))}
+              </div>
+            )}
+            {patientRecords.radiology && patientRecords.radiology.length > 0 && (
+              <div style={{ marginBottom: "15px" }}>
+                <div style={styles.recordType}>Radiology Requests ({patientRecords.radiology.length})</div>
+                {patientRecords.radiology.slice(0, 3).map((record, idx) => (
+                  <div key={idx} style={styles.recordItem}>
+                    <strong>Date:</strong> {record.request_date || 'N/A'} - <strong>Test:</strong> {record.test_type || 'N/A'}
+                  </div>
+                ))}
+              </div>
+            )}
+            {patientRecords.labReports && patientRecords.labReports.length > 0 && (
+              <div style={{ marginBottom: "15px" }}>
+                <div style={styles.recordType}>Lab Reports ({patientRecords.labReports.length})</div>
+                {patientRecords.labReports.slice(0, 3).map((record, idx) => (
+                  <div key={idx} style={styles.recordItem}>
+                    <strong>Date:</strong> {record.date || 'N/A'} - <strong>Test:</strong> {record.test_name || 'N/A'}
+                  </div>
+                ))}
+              </div>
+            )}
+            {(!patientRecords.diagnosis || patientRecords.diagnosis.length === 0) &&
+             (!patientRecords.treatment || patientRecords.treatment.length === 0) &&
+             (!patientRecords.pathology || patientRecords.pathology.length === 0) &&
+             (!patientRecords.radiology || patientRecords.radiology.length === 0) &&
+             (!patientRecords.labReports || patientRecords.labReports.length === 0) && (
+              <div style={{ color: "#666", fontStyle: "italic" }}>No records found for this patient.</div>
+            )}
+          </div>
+        )}
+      </div>
+
       <form onSubmit={onSubmit}>
         {/* Patient & Test Information */}
         <div style={styles.section}>
@@ -277,39 +547,37 @@ export default function Pathology() {
         {/* Favourite Tests */}
         <div style={styles.section}>
           <h2 style={styles.h2}>Favourite Tests</h2>
-          <div style={styles.checkboxGroup}>
+          <label style={styles.label} htmlFor="favourite_tests">Favourite Test:</label>
+          <select
+            id="favourite_tests"
+            name="favourite_tests"
+            value={form.favourite_tests}
+            onChange={onChange}
+            style={styles.select}
+          >
+            <option value="">Select Favourite Test</option>
             {["Cervical Cytology", "E/LFTs", "ESR", "FBE", "HbA1C", "HDL Cholesterol", "Histology", "PSA", "TSH", "Urine M/C/S"].map(test => (
-              <label key={test} style={styles.label}>
-                <input
-                  type="checkbox"
-                  name="favourite_tests[]"
-                  value={test}
-                  checked={form.favourite_tests.includes(test)}
-                  onChange={onChange}
-                />
-                {" "}{test}
-              </label>
+              <option key={test} value={test}>{test}</option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Test List */}
         <div style={styles.section}>
           <h2 style={styles.h2}>Test List</h2>
-          <div style={styles.checkboxGroup}>
+          <label style={styles.label} htmlFor="test_list">Test:</label>
+          <select
+            id="test_list"
+            name="test_list"
+            value={form.test_list}
+            onChange={onChange}
+            style={styles.select}
+          >
+            <option value="">Select Test</option>
             {["B-HCG (Quantitative)", "B-HCG (Serum)", "B12", "Blood Culture", "CRP", "Electrolytes", "Ferritin", "Glucose fasting", "HIV 1/2 Ab/Ag", "Iron studies", "LFT", "Lipids", "PSA", "RF", "TSH", "Urine M/C/S", "Vitamin D"].map(test => (
-              <label key={test} style={styles.label}>
-                <input
-                  type="checkbox"
-                  name="test_list[]"
-                  value={test}
-                  checked={form.test_list.includes(test)}
-                  onChange={onChange}
-                />
-                {" "}{test}
-              </label>
+              <option key={test} value={test}>{test}</option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Clinical Details */}

@@ -7,6 +7,8 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     const {
+      patient_id,
+      patient_name,
       requestDate,    // frontend sends camelCase
       lab,
       testType,
@@ -32,12 +34,14 @@ router.post('/', async (req, res) => {
 
     const sql = `
         INSERT INTO radiology_requests (
-            request_date, laboratory, test_type, side_left, side_right, region, other_region,
+            patient_id, patient_name, request_date, laboratory, test_type, side_left, side_right, region, other_region,
             requests_printed, other_test, clinical_details, details_form, add_entry, due_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
+      patient_id || null,
+      patient_name || null,
       requestDate,
       lab,
       testType,
