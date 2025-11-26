@@ -3,7 +3,7 @@
 <<<<<<< HEAD
 A full-stack web application for managing electronic medical records with patient registration, diagnosis, treatment, pathology, radiology, and appointment scheduling.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -83,7 +83,7 @@ smart-emr-ui/
 
 All tables use `patient_id` as the primary linking key to connect records across all forms.
 
-## 🔑 Features
+##  Features
 
 - **Patient Management:** Register and search patients
 - **Diagnosis:** Record and track patient diagnoses
@@ -107,7 +107,7 @@ DB_USER=root
 DB_PASSWORD=Srip1898!
 ```
 
-## 📝 API Endpoints
+## API Endpoints
 
 - `GET /api/patients` - Get all patients
 - `GET /api/patients/search?query=...` - Search patients
@@ -120,16 +120,13 @@ DB_PASSWORD=Srip1898!
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 
-## 🛠️ Development
+## Development
 
 - Frontend runs on port 5173 (Vite dev server)
 - Backend runs on port 3001 (Express server)
 - Backend auto-reloads on file changes (--watch mode)
 
-## 📄 License
 
-This project is for educational/development purposes.
-=======
 FRONT END: http://localhost:5173
 BACK END: http://localhost:3001
 >>>>>>> 07140fefe5699e58fa0262d39fa1b5cc3409c95b
