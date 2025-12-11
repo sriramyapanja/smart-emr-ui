@@ -29,10 +29,10 @@ A full-stack web application for managing electronic medical records with patien
 4. **Set up the database:**
    ```bash
    # Create database
-   mysql -u root -p'Srip1898!' -e "CREATE DATABASE IF NOT EXISTS electronic_health_records;"
+   mysql -u root -p'****' -e "CREATE DATABASE IF NOT EXISTS electronic_health_records;"
    
    # Import schema
-   mysql -u root -p'Srip1898!' electronic_health_records < server/config/database_schema.sql
+   mysql -u root -p'*****' electronic_health_records < server/config/database_schema.sql
    
    # Create default admin user
    cd server
@@ -78,7 +78,7 @@ smart-emr-ui/
 ## 🗄️ Database
 
 - **Database Name:** `electronic_health_records`
-- **Database Password:** `Srip1898!` (default)
+- **Database Password:** `******` (default)
 - **Tables:** patients, diagnosis, treatment, medical_history, lab_reports, appointments, radiology_requests, pathology_requests, users
 
 All tables use `patient_id` as the primary linking key to connect records across all forms.
